@@ -100,13 +100,14 @@ async def search_by_metadata(metadata_filter: dict, n_results: int = 10) -> dict
         "ids": results["ids"]
     }
 
-@app.get("/health")
-async def health():
-    return {"status": "healthy", "service": "chroma_mcp"}
+@app.get("/healthz")
+async def healthz():
+    return {"ok": True}
 
-app.mount("/tools", mcp.http_app())
+from fastmcp.server.http import create_sse_app
+app.mount("/tools", create_sse_app(mcp._mcp_server))
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("CHROMA_MCP_PORT", "8002"))
+    port = int(os.getenv("CHROMA_MCP_PORT", "8102"))
     uvicorn.run(app, host="0.0.0.0", port=port)

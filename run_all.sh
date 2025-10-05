@@ -2,10 +2,10 @@
 
 set -e
 
-export HA_MCP_PORT=8001
-export CHROMA_MCP_PORT=8002
-export VOICE_MCP_PORT=8003
-export MEMORY_PROXY_PORT=8000
+export HA_MCP_PORT=8101
+export CHROMA_MCP_PORT=8102
+export VOICE_MCP_PORT=8103
+export MEMORY_PROXY_PORT=8104
 
 export HA_MCP_URL="http://localhost:${HA_MCP_PORT}"
 export CHROMA_MCP_URL="http://localhost:${CHROMA_MCP_PORT}"
@@ -23,21 +23,21 @@ echo "Voice MCP:     http://localhost:${VOICE_MCP_PORT}"
 echo "Memory Proxy:  http://localhost:${MEMORY_PROXY_PORT}"
 echo "======================================"
 
-python servers/ha_mcp/main.py &
+python ha_mcp/main.py &
 HA_PID=$!
 echo "Started HA MCP (PID: $HA_PID)"
 
-python servers/chroma_mcp/main.py &
+python chroma_mcp/main.py &
 CHROMA_PID=$!
 echo "Started ChromaDB MCP (PID: $CHROMA_PID)"
 
-python servers/voice_mcp/main.py &
+python voice_mcp/main.py &
 VOICE_PID=$!
 echo "Started Voice MCP (PID: $VOICE_PID)"
 
 sleep 2
 
-python services/memory_proxy/main.py &
+python memory_proxy/main.py &
 PROXY_PID=$!
 echo "Started Memory Proxy (PID: $PROXY_PID)"
 

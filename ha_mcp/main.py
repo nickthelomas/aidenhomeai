@@ -81,13 +81,14 @@ async def get_config() -> dict:
     """
     return await ha_api_call("GET", "config")
 
-@app.get("/health")
-async def health():
-    return {"status": "healthy", "service": "ha_mcp"}
+@app.get("/healthz")
+async def healthz():
+    return {"ok": True}
 
-app.mount("/tools", mcp.http_app())
+from fastmcp.server.http import create_sse_app
+app.mount("/tools", create_sse_app(mcp._mcp_server))
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("HA_MCP_PORT", "8001"))
+    port = int(os.getenv("HA_MCP_PORT", "8101"))
     uvicorn.run(app, host="0.0.0.0", port=port)

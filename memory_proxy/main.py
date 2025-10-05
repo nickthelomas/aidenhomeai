@@ -8,9 +8,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-HA_MCP_URL = os.getenv("HA_MCP_URL", "http://localhost:8001")
-CHROMA_MCP_URL = os.getenv("CHROMA_MCP_URL", "http://localhost:8002")
-VOICE_MCP_URL = os.getenv("VOICE_MCP_URL", "http://localhost:8003")
+HA_MCP_URL = os.getenv("HA_MCP_URL", "http://localhost:8101")
+CHROMA_MCP_URL = os.getenv("CHROMA_MCP_URL", "http://localhost:8102")
+VOICE_MCP_URL = os.getenv("VOICE_MCP_URL", "http://localhost:8103")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 MODEL_NAME = os.getenv("MODEL_NAME", "anthropic/claude-3-haiku")
 
@@ -162,11 +162,11 @@ async def call_tool(tool_call: ToolCall):
     result = await call_mcp_tool(base_url, tool_call.tool_name, tool_call.arguments)
     return {"result": result}
 
-@app.get("/health")
-async def health():
-    return {"status": "healthy", "service": "memory_proxy"}
+@app.get("/healthz")
+async def healthz():
+    return {"ok": True}
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("MEMORY_PROXY_PORT", "8000"))
+    port = int(os.getenv("MEMORY_PROXY_PORT", "8104"))
     uvicorn.run(app, host="0.0.0.0", port=port)
