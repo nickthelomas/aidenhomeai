@@ -104,7 +104,7 @@ async def search_by_metadata(metadata_filter: dict, n_results: int = 10) -> dict
 async def health():
     return {"status": "healthy", "service": "chroma_mcp"}
 
-app.mount("/tools", mcp.sse_app())
+app.mount("/tools", mcp.http_app())
 
 if __name__ == "__main__":
     import uvicorn

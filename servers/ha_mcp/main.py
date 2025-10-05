@@ -44,23 +44,23 @@ async def get_entity_state(entity_id: str) -> dict:
     return await ha_api_call("GET", f"states/{entity_id}")
 
 @mcp.tool()
-async def call_service(domain: str, service: str, entity_id: str | None = None, **kwargs) -> dict:
+async def call_service(domain: str, service: str, entity_id: str | None = None, service_data: dict | None = None) -> dict:
     """Call a Home Assistant service.
     
     Args:
         domain: The domain of the service (e.g., 'light', 'switch')
         service: The service to call (e.g., 'turn_on', 'turn_off')
         entity_id: Optional entity ID to target
-        **kwargs: Additional service data
+        service_data: Optional additional service data as JSON dict
     
     Returns:
         Service call response
     """
-    service_data = kwargs.copy()
+    data = service_data.copy() if service_data else {}
     if entity_id:
-        service_data["entity_id"] = entity_id
+        data["entity_id"] = entity_id
     
-    return await ha_api_call("POST", f"services/{domain}/{service}", service_data)
+    return await ha_api_call("POST", f"services/{domain}/{service}", data)
 
 @mcp.tool()
 async def get_states() -> dict:
@@ -85,7 +85,7 @@ async def get_config() -> dict:
 async def health():
     return {"status": "healthy", "service": "ha_mcp"}
 
-app.mount("/tools", mcp.sse_app())
+app.mount("/tools", mcp.http_app())
 
 if __name__ == "__main__":
     import uvicorn

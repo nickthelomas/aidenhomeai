@@ -1,11 +1,9 @@
 #!/bin/bash
 
-set -e
-
 BASE_URL_HA="http://localhost:8001"
 BASE_URL_CHROMA="http://localhost:8002"
 BASE_URL_VOICE="http://localhost:8003"
-BASE_URL_PROXY="http://localhost:8000"
+BASE_URL_PROXY="http://localhost:5000"
 
 TESTS_PASSED=0
 TESTS_FAILED=0

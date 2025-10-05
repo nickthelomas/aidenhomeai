@@ -73,9 +73,11 @@ async def get_ha_context() -> str:
             {}
         )
         
-        if isinstance(result, list):
+        states = result.get("states", []) if isinstance(result, dict) else result
+        
+        if isinstance(states, list):
             context_parts = []
-            for entity in result[:10]:
+            for entity in states[:10]:
                 if isinstance(entity, dict):
                     entity_id = entity.get("entity_id", "")
                     state = entity.get("state", "")

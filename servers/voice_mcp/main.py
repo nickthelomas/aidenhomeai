@@ -111,7 +111,7 @@ async def test_wyoming_connection() -> dict:
 async def health():
     return {"status": "healthy", "service": "voice_mcp"}
 
-app.mount("/tools", mcp.sse_app())
+app.mount("/tools", mcp.http_app())
 
 if __name__ == "__main__":
     import uvicorn
