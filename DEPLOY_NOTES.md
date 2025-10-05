@@ -9,17 +9,24 @@ This guide provides exact instructions for transferring Project Aiden to Ubuntu 
 - **Python**: 3.11+
 - **Base Path**: `/opt/aiden`
 
-## Directory Structure on Ubuntu Server
+## Exact Directory Structure on Ubuntu Server
 
 ```
 /opt/aiden/
 ├── ha_mcp/              # Home Assistant MCP service
+│   └── main.py
 ├── chroma_mcp/          # ChromaDB MCP service
+│   └── main.py
 ├── voice_mcp/           # Wyoming MCP service
+│   └── main.py
 ├── memory_proxy/        # Memory Proxy orchestrator
+│   └── main.py
 ├── ingestion/           # Ingestion CLI
+│   └── ingest.py
 ├── documents/           # Document source directory
 ├── .env                 # Environment configuration
+├── requirements.txt     # Pinned dependencies
+├── run_all.sh           # Service launcher
 └── docker-compose.yml   # ChromaDB & Wyoming containers
 ```
 
@@ -33,15 +40,23 @@ sudo chown -R $USER:$USER /opt/aiden
 
 ### 2. Copy Service Files
 
-From this Replit project, copy files to Ubuntu Server:
+From this Replit project, copy files to Ubuntu Server (1:1 path matching):
 
 ```bash
-# On your local machine or via scp
-scp -r servers/ha_mcp/main.py user@ubuntu:/opt/aiden/ha_mcp/
-scp -r servers/chroma_mcp/main.py user@ubuntu:/opt/aiden/chroma_mcp/
-scp -r servers/voice_mcp/main.py user@ubuntu:/opt/aiden/voice_mcp/
-scp -r services/memory_proxy/main.py user@ubuntu:/opt/aiden/memory_proxy/
-scp -r ingestion/ingest.py user@ubuntu:/opt/aiden/ingestion/
+# Copy MCP servers
+scp ha_mcp/main.py user@ubuntu:/opt/aiden/ha_mcp/
+scp chroma_mcp/main.py user@ubuntu:/opt/aiden/chroma_mcp/
+scp voice_mcp/main.py user@ubuntu:/opt/aiden/voice_mcp/
+
+# Copy orchestrator and ingestion
+scp memory_proxy/main.py user@ubuntu:/opt/aiden/memory_proxy/
+scp ingestion/ingest.py user@ubuntu:/opt/aiden/ingestion/
+
+# Copy configuration and scripts
+scp requirements.txt user@ubuntu:/opt/aiden/
+scp run_all.sh user@ubuntu:/opt/aiden/
+scp .env.example user@ubuntu:/opt/aiden/
+scp -r documents/* user@ubuntu:/opt/aiden/documents/
 ```
 
 ### 3. Install Python Dependencies
@@ -50,7 +65,7 @@ scp -r ingestion/ingest.py user@ubuntu:/opt/aiden/ingestion/
 cd /opt/aiden
 python3 -m venv venv
 source venv/bin/activate
-pip install fastapi fastmcp httpx chromadb uvicorn python-dotenv sse-starlette
+pip install -r requirements.txt
 ```
 
 ### 4. Create Docker Compose File
@@ -100,11 +115,11 @@ Create `/opt/aiden/.env`:
 HA_URL=http://192.168.1.100:8123
 HA_TOKEN=your_actual_home_assistant_token
 
-# ChromaDB Configuration
+# ChromaDB Configuration (use Docker service name)
 CHROMA_URL=http://chromadb:8000
 COLLECTION_NAME=aiden
 
-# Wyoming Configuration
+# Wyoming Configuration (use Docker service name)
 WYOMING_HOST=wyoming
 WYOMING_PORT=10300
 
@@ -113,15 +128,15 @@ OPENROUTER_API_KEY=your_openrouter_api_key
 MODEL_NAME=anthropic/claude-3-haiku
 
 # Service Ports
-HA_MCP_PORT=8001
-CHROMA_MCP_PORT=8002
-VOICE_MCP_PORT=8003
-MEMORY_PROXY_PORT=8000
+HA_MCP_PORT=8101
+CHROMA_MCP_PORT=8102
+VOICE_MCP_PORT=8103
+MEMORY_PROXY_PORT=8104
 
 # Internal Service URLs
-HA_MCP_URL=http://localhost:8001
-CHROMA_MCP_URL=http://localhost:8002
-VOICE_MCP_URL=http://localhost:8003
+HA_MCP_URL=http://localhost:8101
+CHROMA_MCP_URL=http://localhost:8102
+VOICE_MCP_URL=http://localhost:8103
 ```
 
 ## Required Environment Variables
@@ -129,19 +144,19 @@ VOICE_MCP_URL=http://localhost:8003
 ### Mandatory
 - `HA_URL` - Full URL to your Home Assistant instance
 - `HA_TOKEN` - Long-lived access token from HA
-- `CHROMA_URL` - ChromaDB URL (use Docker service name)
-- `WYOMING_HOST` - Wyoming container hostname
-- `WYOMING_PORT` - Wyoming TCP port
+- `CHROMA_URL` - ChromaDB URL (use Docker service name: `http://chromadb:8000`)
+- `WYOMING_HOST` - Wyoming container hostname (use Docker service name: `wyoming`)
+- `WYOMING_PORT` - Wyoming TCP port (default: `10300`)
+- `COLLECTION_NAME` - ChromaDB collection name (default: `aiden`)
 
 ### Optional
 - `OPENROUTER_API_KEY` - For LLM integration
 - `MODEL_NAME` - LLM model selection
-- `COLLECTION_NAME` - ChromaDB collection name
 
 ### Docker Compose Service Names
 When services reference each other in Docker:
-- ChromaDB: `chromadb` (resolves to container)
-- Wyoming: `wyoming` (resolves to container)
+- **chromadb** - ChromaDB container (resolves to container in aiden_net)
+- **wyoming** - Wyoming-Whisper container (resolves to container in aiden_net)
 
 ## Starting Services
 
@@ -163,38 +178,15 @@ docker-compose logs wyoming
 source venv/bin/activate
 cd /opt/aiden
 
-# Add sample documents
-echo "Project Aiden documentation content" > documents/sample.txt
-
-# Run ingestion
-CHROMA_URL=http://localhost:8000 python ingestion/ingest.py
+# Ingest with CLI arguments
+CHROMA_URL=http://localhost:8000 python ingestion/ingest.py --docs ./documents --collection aiden
 ```
 
 ### 4. Start MCP Services
 
-Create `/opt/aiden/start_services.sh`:
-
 ```bash
-#!/bin/bash
-
-source /opt/aiden/venv/bin/activate
-cd /opt/aiden
-
-export $(cat .env | grep -v '^#' | xargs)
-
-python ha_mcp/main.py &
-python chroma_mcp/main.py &
-python voice_mcp/main.py &
-sleep 2
-python memory_proxy/main.py &
-
-echo "All services started"
-```
-
-Make executable and run:
-```bash
-chmod +x /opt/aiden/start_services.sh
-/opt/aiden/start_services.sh
+chmod +x /opt/aiden/run_all.sh
+/opt/aiden/run_all.sh
 ```
 
 ## Systemd Service (Production)
@@ -219,42 +211,28 @@ Restart=always
 WantedBy=multi-user.target
 ```
 
-Repeat for each service (chroma_mcp, voice_mcp, memory_proxy).
+Repeat for each service: `aiden-chroma-mcp.service`, `aiden-voice-mcp.service`, `aiden-memory-proxy.service`.
 
 Enable and start:
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable aiden-ha-mcp
-sudo systemctl start aiden-ha-mcp
+sudo systemctl enable aiden-ha-mcp aiden-chroma-mcp aiden-voice-mcp aiden-memory-proxy
+sudo systemctl start aiden-ha-mcp aiden-chroma-mcp aiden-voice-mcp aiden-memory-proxy
 ```
-
-## Network Configuration
-
-### Firewall Rules
-```bash
-# Allow MCP services (if needed from other hosts)
-sudo ufw allow 8000/tcp  # Memory Proxy
-sudo ufw allow 8001/tcp  # HA MCP
-sudo ufw allow 8002/tcp  # ChromaDB MCP
-sudo ufw allow 8003/tcp  # Voice MCP
-```
-
-### Docker Network
-Services use `aiden_net` bridge network for inter-container communication.
 
 ## Verification
 
 ### Test Health Endpoints
 ```bash
-curl http://localhost:8001/health  # HA MCP
-curl http://localhost:8002/health  # ChromaDB MCP
-curl http://localhost:8003/health  # Voice MCP
-curl http://localhost:8000/health  # Memory Proxy
+curl http://localhost:8101/healthz  # HA MCP → {"ok":true}
+curl http://localhost:8102/healthz  # ChromaDB MCP → {"ok":true}
+curl http://localhost:8103/healthz  # Voice MCP → {"ok":true}
+curl http://localhost:8104/healthz  # Memory Proxy → {"ok":true}
 ```
 
 ### Test MCP Tool Call
 ```bash
-curl -X POST http://localhost:8002/tools/call \
+curl -X POST http://localhost:8102/tools/call \
   -H "Content-Type: application/json" \
   -d '{
     "method": "tools/call",
@@ -267,7 +245,7 @@ curl -X POST http://localhost:8002/tools/call \
 
 ### Test RAG Query
 ```bash
-curl -X POST http://localhost:8000/query \
+curl -X POST http://localhost:8104/query \
   -H "Content-Type: application/json" \
   -d '{
     "query": "What is Project Aiden?",
@@ -276,43 +254,27 @@ curl -X POST http://localhost:8000/query \
   }'
 ```
 
-## Troubleshooting
-
-### ChromaDB Connection Issues
-- Verify Docker container: `docker ps | grep chromadb`
-- Check logs: `docker-compose logs chromadb`
-- Ensure CHROMA_URL uses container name in .env
-
-### Home Assistant Connection
-- Verify HA_URL is accessible from Ubuntu server
-- Test token: `curl -H "Authorization: Bearer $HA_TOKEN" $HA_URL/api/`
-- Check firewall rules on HA host
-
-### Wyoming Connection
-- Verify container: `docker ps | grep wyoming`
-- Test TCP port: `nc -zv wyoming 10300`
-- Check Wyoming logs: `docker-compose logs wyoming`
-
 ## Code Modification Requirements
 
 **NONE** - All services are configured via environment variables. No code edits required after transfer.
 
 Only required changes on Ubuntu:
-1. Update `.env` with actual values
-2. Ensure `docker-compose.yml` matches your network setup
+1. Update `.env` with actual values (HA_URL, HA_TOKEN, etc.)
+2. Ensure `docker-compose.yml` service names match env vars (chromadb, wyoming)
 3. Configure systemd services for production
 
-## Backup & Restore
+## Ports Summary
 
-### Backup ChromaDB Data
-```bash
-docker run --rm -v aiden_chromadb_data:/data -v $(pwd):/backup ubuntu tar czf /backup/chromadb-backup.tar.gz /data
-```
+| Service | Port | Use |
+|---------|------|-----|
+| HA MCP | 8101 | Home Assistant integration |
+| ChromaDB MCP | 8102 | Vector database RAG |
+| Voice MCP | 8103 | Wyoming voice processing |
+| Memory Proxy | 8104 | Orchestrator |
 
-### Restore ChromaDB Data
-```bash
-docker run --rm -v aiden_chromadb_data:/data -v $(pwd):/backup ubuntu tar xzf /backup/chromadb-backup.tar.gz -C /
-```
+All services expose:
+- `GET /healthz` → `{"ok": true}`
+- `POST /tools/call` (MCP servers only)
 
 ## Security Notes
 
@@ -324,8 +286,9 @@ docker run --rm -v aiden_chromadb_data:/data -v $(pwd):/backup ubuntu tar xzf /b
 
 ## Expected Service Behavior
 
-- All services expose `/health` returning `{"status": "healthy", "service": "..."}`
+- All services expose `/healthz` returning `{"ok": true}`
 - MCP servers expose tools at `/tools` via SSE
 - Memory Proxy orchestrates tool calls and aggregates context
 - ChromaDB persists data in Docker volume
 - Wyoming provides real-time transcription via TCP socket
+- Ingestion CLI uses MiniLM embedding model (all-MiniLM-L6-v2)

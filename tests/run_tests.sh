@@ -56,7 +56,7 @@ test_ha_tool() {
 test_chroma_ingestion() {
     echo -n "Ingesting sample documents... "
     
-    result=$(python ingestion/ingest.py --docs ./documents --collection aiden 2>&1)
+    result=$(python ../ingestion/ingest.py --docs ../documents --collection aiden 2>&1)
     
     if echo "$result" | grep -q "Successfully ingested"; then
         echo "✓ PASSED"

@@ -85,8 +85,7 @@ async def get_config() -> dict:
 async def healthz():
     return {"ok": True}
 
-from fastmcp.server.http import create_sse_app
-app.mount("/tools", create_sse_app(mcp._mcp_server))
+app.mount("/tools", mcp.sse_app())
 
 if __name__ == "__main__":
     import uvicorn
