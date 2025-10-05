@@ -42,8 +42,13 @@ def main():
         
         client = chromadb.HttpClient(host=host, port=port)
         
+        embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name="all-MiniLM-L6-v2"
+        )
+        
         collection = client.get_or_create_collection(
-            name=collection_name
+            name=collection_name,
+            embedding_function=embedding_fn
         )
         
         documents = []

@@ -1,6 +1,7 @@
 import os
 from typing import Any, Optional
 import chromadb
+from chromadb.utils import embedding_functions
 from fastapi import FastAPI
 from fastmcp import FastMCP
 from dotenv import load_dotenv
@@ -19,7 +20,13 @@ def get_chroma_client():
 
 def get_collection():
     client = get_chroma_client()
-    return client.get_or_create_collection(name=COLLECTION_NAME)
+    embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name="all-MiniLM-L6-v2"
+    )
+    return client.get_or_create_collection(
+        name=COLLECTION_NAME,
+        embedding_function=embedding_fn
+    )
 
 @mcp.tool()
 async def query_documents(query_text: str, n_results: int = 5) -> dict:
