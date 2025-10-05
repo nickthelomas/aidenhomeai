@@ -1,0 +1,27 @@
+Project Aiden Hardware Components
+
+AI Workhorse:
+- Model: GMKtec K8 Plus mini-PC
+- RAM: 32GB minimum for smooth LLM and NVR operation
+- Purpose: Hosts Docker containers for all core AI services
+- Runs: Ollama LLM, XTTS voice synthesis, Frigate NVR, all MCP servers
+
+AI Accelerator:
+- Model: Google Coral TPU (USB)
+- Purpose: Dedicated vision processing for Frigate
+- Benefit: High-speed, low-power object detection, frees CPU resources
+
+Control & Integration Hub:
+- Model: Raspberry Pi 5
+- OS: Home Assistant Operating System (HAOS)
+- Purpose: Lightweight automation and device controller
+- Includes: ZBT-1 Zigbee/Thread dongle for smart device communication
+
+Satellite Devices:
+- Lounge: Raspberry Pi 5 (8GB) with high-res camera and display
+- Bedrooms: Raspberry Pi Zero 2W with camera and USB audio dongle
+- Purpose: Distributed sensing, voice interaction, visual presence detection
+
+Network:
+- Gigabit Ethernet router for wired connectivity
+- Ensures maximum stability and speed for AI Workhorse and HA Hub

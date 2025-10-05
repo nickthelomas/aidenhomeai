@@ -1,0 +1,15 @@
+Project Aiden: The Definitive MCP-Integrated Build Manual
+
+Project Aiden is a privacy-focused, high-performance smart home AI system built on a service-oriented architecture. The system uses the Model Context Protocol (MCP) to create independent, containerized microservices that communicate via standardized HTTP/SSE transport.
+
+Core Principles:
+1. Privacy - Local-first processing, no cloud dependencies for critical functions
+2. Performance - Dedicated hardware for AI inference and low-latency interactions
+3. Personalization - Infinite customization and learning capabilities
+
+The architecture consists of:
+- AI Workhorse (GMKtec K8 Plus) - Powerful mini-PC for heavy computation
+- Control & Integration Hub (Raspberry Pi 5) - Real-time device control running Home Assistant
+- Multiple satellite devices for distributed sensing and interaction
+
+All services expose their capabilities as MCP tools, allowing seamless integration and orchestration.

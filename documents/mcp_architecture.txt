@@ -1,0 +1,18 @@
+Model Context Protocol (MCP) Architecture
+
+The Model Context Protocol is the key enabling technology for Project Aiden's distributed architecture. MCP decouples tool providers from AI application consumers through three core primitives:
+
+1. Tools - Functions that AI agents can execute (e.g., get_entity_state, query_documents)
+2. Resources - Abstractions for data sources (e.g., ChromaDB collections)
+3. Prompts - Reusable prompt templates for personality consistency
+
+Transport Protocol:
+All custom MCP servers use HTTP/SSE (Server-Sent Events) transport instead of stdio. This ensures tools are available as independent microservices across the entire local network, not just on a single machine.
+
+MCP Services in Aiden:
+- Home Assistant MCP - Device control and state management
+- ChromaDB MCP - Vector database for RAG (Retrieval Augmented Generation)
+- Wyoming Voice MCP - Speech-to-text transcription via Wyoming-Whisper
+- Memory Proxy - Orchestrator that aggregates context and calls LLM
+
+Each service exposes tools at /tools endpoint following JSON-RPC 2.0 message format.
